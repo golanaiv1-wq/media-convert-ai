@@ -3,8 +3,7 @@ export default async function handler(req, res) {
     if (!url) return res.status(400).json({ error: 'Missing URL' });
 
     try {
-        // פנייה למנוע ההורדה החיצוני
-        const response = await fetch(`https://api.cobalt.tools/api/json`, {
+        const response = await fetch(`https://cobalt.api.unblockit.win/api/json`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
