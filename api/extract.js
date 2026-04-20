@@ -3,7 +3,8 @@ export default async function handler(req, res) {
     if (!url) return res.status(400).json({ error: 'Missing URL' });
 
     try {
-        const response = await fetch(`https://cobalt.api.unblockit.win/api/json`, {
+        // שימוש בכתובת המנוע הרשמית והיציבה ביותר
+        const response = await fetch(`https://api.cobalt.tools/api/json`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -21,9 +22,10 @@ export default async function handler(req, res) {
         if (data.url) {
             res.status(200).json({ url: data.url });
         } else {
-            res.status(500).json({ error: 'Could not extract audio' });
+            // אם המנוע מחזיר שגיאה, נציג אותה
+            res.status(500).json({ error: data.text || 'Manoe error' });
         }
     } catch (error) {
-        res.status(500).json({ error: 'Server error' });
+        res.status(500).json({ error: 'Server connection error' });
     }
 }
