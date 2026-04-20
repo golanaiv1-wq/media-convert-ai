@@ -141,18 +141,46 @@
             linkTab.classList.remove('bg-indigo-600');
         });
 
-        // Placeholder for Link Logic
-        function processLink() {
+        // Link Extraction Logic
+        async function processLink() {
             const url = document.getElementById('videoUrl').value;
             if(!url) return alert('Please paste a link first!');
             
-            document.getElementById('statusArea').classList.remove('hidden');
-            document.getElementById('statusLabel').innerText = "Fetching from Web...";
-            
-            alert("To fetch links, we need to set up a free backend. For now, try the 'Upload File' tab to see the magic!");
+            const statusArea = document.getElementById('statusArea');
+            const statusLabel = document.getElementById('statusLabel');
+            const progressBar = document.getElementById('progressBar');
+            const resultArea = document.getElementById('resultArea');
+
+            statusArea.classList.remove('hidden');
+            resultArea.classList.add('hidden');
+            statusLabel.innerText = "Connecting to Engine...";
+            progressBar.style.width = '30%';
+
+            try {
+                const response = await fetch(`/api/extract?url=${encodeURIComponent(url)}`);
+                const data = await response.json();
+
+                if (data.url) {
+                    progressBar.style.width = '100%';
+                    statusLabel.innerText = "Success!";
+                    
+                    document.getElementById('audioPlayer').src = data.url;
+                    document.getElementById('downloadBtn').href = data.url;
+                    
+                    setTimeout(() => {
+                        statusArea.classList.add('hidden');
+                        resultArea.classList.remove('hidden');
+                    }, 500);
+                } else {
+                    throw new Error("Could not find audio");
+                }
+            } catch (error) {
+                alert("Error: Link not supported or service busy. Try another link!");
+                statusArea.classList.add('hidden');
+            }
         }
 
-        // FFmpeg Logic (Same as before but with UI updates)
+        // FFmpeg Logic (Local Files)
         const { createFFmpeg, fetchFile } = FFmpeg;
         const ffmpeg = createFFmpeg({ log: true });
 
@@ -165,6 +193,7 @@
         async function handleFile(file) {
             document.getElementById('statusArea').classList.remove('hidden');
             document.getElementById('resultArea').classList.add('hidden');
+            document.getElementById('statusLabel').innerText = "Processing File...";
             
             if (!ffmpeg.isLoaded()) await ffmpeg.load();
 
