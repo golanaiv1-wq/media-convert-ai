@@ -7,7 +7,8 @@ export default async function handler(req, res) {
     if (!url) return res.status(400).json({ error: 'Missing URL' });
 
     try {
-        const response = await fetch('https://api.cobalt.tools/', {
+        // שימוש בשרת חלופי שלא דורש הרשמה
+        const response = await fetch('https://cobalt.pervage.xyz/', {
             method: 'POST',
             headers: {
                 'accept': 'application/json',
@@ -15,20 +16,17 @@ export default async function handler(req, res) {
             },
             body: JSON.stringify({
                 url: url,
-                videoQuality: '720',
                 downloadMode: 'audio',
-                audioFormat: 'mp3',
-                filenamePattern: 'basic'
+                audioFormat: 'mp3'
             })
         });
 
         const data = await response.json();
         
-        // בגרסה החדשה התשובה נמצאת בשדה data.url או data.text
         if (data && data.url) {
             return res.status(200).json({ url: data.url });
         } else {
-            return res.status(500).json({ error: 'Cobalt error', details: data });
+            return res.status(500).json({ error: 'Source busy', details: data });
         }
     } catch (error) {
         return res.status(500).json({ error: 'Server fetch failed', message: error.message });
