@@ -1,31 +1,36 @@
 export default async function handler(req, res) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
     const { url } = req.query;
     if (!url) return res.status(400).json({ error: 'Missing URL' });
 
     try {
-        // שימוש בכתובת המנוע הרשמית והיציבה ביותר
-        const response = await fetch(`https://api.cobalt.tools/api/json`, {
+        const response = await fetch('https://api.cobalt.tools/', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                'accept': 'application/json',
+                'content-type': 'application/json'
             },
             body: JSON.stringify({
                 url: url,
+                videoQuality: '720',
                 downloadMode: 'audio',
-                audioFormat: 'mp3'
+                audioFormat: 'mp3',
+                filenamePattern: 'basic'
             })
         });
 
         const data = await response.json();
         
-        if (data.url) {
-            res.status(200).json({ url: data.url });
+        // בגרסה החדשה התשובה נמצאת בשדה data.url או data.text
+        if (data && data.url) {
+            return res.status(200).json({ url: data.url });
         } else {
-            // אם המנוע מחזיר שגיאה, נציג אותה
-            res.status(500).json({ error: data.text || 'Manoe error' });
+            return res.status(500).json({ error: 'Cobalt error', details: data });
         }
     } catch (error) {
-        res.status(500).json({ error: 'Server connection error' });
+        return res.status(500).json({ error: 'Server fetch failed', message: error.message });
     }
 }
