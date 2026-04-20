@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediaConvert AI | Extract Audio & Video</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.0/dist/ffmpeg.min.js"></script>
+
+    <style>
+        body {
+            background-color: #020617;
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+        }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(51, 65, 85, 0.5);
+        }
+        .gradient-btn {
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            transition: transform 0.2s, opacity 0.2s;
+        }
+        .gradient-btn:hover {
+            transform: translateY(-2px);
+            opacity: 0.9;
+        }
+        .input-field {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid #334155;
+            color: white;
+        }
+        .input-field:focus {
+            border-color: #6366f1;
+            outline: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-6">
+
+    <div class="text-center mb-12">
+        <h1 class="text-6xl font-black mb-4 tracking-tight">
+            <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">
+                MediaConvert AI
+            </span>
+        </h1>
+        <p class="text-slate-400 text-lg max-w-md mx-auto">
+            The fastest way to convert video to MP3. Supports local files and web links.
+        </p>
+    </div>
+
+    <div class="glass-card p-10 rounded-3xl shadow-2xl w-full max-w-3xl">
+        
+        <div class="flex gap-4 mb-8">
+            <button id="linkTab" class="flex-1 py-3 rounded-xl bg-indigo-600 font-bold text-sm uppercase tracking-wider">Paste Link</button>
+            <button id="fileTab" class="flex-1 py-3 rounded-xl bg-slate-800 font-bold text-sm uppercase tracking-wider hover:bg-slate-700">Upload File</button>
+        </div>
+
+        <div id="urlSection" class="space-y-4">
+            <input type="text" id="videoUrl" placeholder="Paste YouTube, TikTok or Instagram link..." 
+                   class="w-full input-field p-4 rounded-xl text-lg">
+            <button onclick="processLink()" class="w-full gradient-btn py-4 rounded-xl font-bold text-lg shadow-lg">
+                Extract Audio from Link
+            </button>
+        </div>
+
+        <div id="fileSection" class="hidden space-y-4">
+            <div id="dropZone" class="border-2 border-dashed border-slate-700 rounded-2xl p-12 text-center hover:border-indigo-500 cursor-pointer transition-all">
+                <p class="text-xl text-slate-300 font-medium">Drag & Drop Video File</p>
+                <p class="text-sm text-slate-500">MP4, MOV, MKV up to 500MB</p>
+                <input type="file" id="fileInput" class="hidden" accept="video/*">
+            </div>
+        </div>
+
+        <div id="statusArea" class="hidden mt-8 space-y-4">
+            <div class="flex justify-between text-sm mb-1">
+                <span id="statusLabel" class="text-indigo-400 font-bold uppercase tracking-widest">Processing</span>
+                <span id="progressPercent" class="text-slate-400">0%</span>
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-3">
+                <div id="progressBar" class="bg-indigo-500 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <div id="resultArea" class="hidden mt-8 p-6 bg-slate-800/50 rounded-2xl border border-indigo-500/30 text-center animate-fade-in">
+            <h2 class="text-2xl font-bold mb-4">Ready to Download! 🎧</h2>
+            <audio id="audioPlayer" controls class="w-full mb-6"></audio>
+            <a id="downloadBtn" href="#" download class="block w-full gradient-btn py-4 rounded-xl font-bold text-lg">
+                Download MP3
+            </a>
+        </div>
+
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16 max-w-4xl w-full text-center">
+        <div>
+            <div class="text-indigo-400 text-2xl mb-2">⚡</div>
+            <h4 class="font-bold">Lightning Fast</h4>
+            <p class="text-slate-500 text-sm">Processed locally in your browser.</p>
+        </div>
+        <div>
+            <div class="text-indigo-400 text-2xl mb-2">🔒</div>
+            <h4 class="font-bold">100% Private</h4>
+            <p class="text-slate-500 text-sm">Files never leave your device.</p>
+        </div>
+        <div>
+            <div class="text-indigo-400 text-2xl mb-2">💎</div>
+            <h4 class="font-bold">High Quality</h4>
+            <p class="text-slate-500 text-sm">320kbps crystal clear audio.</p>
+        </div>
+    </div>
+
+    <footer class="mt-16 text-slate-700 text-sm uppercase tracking-widest font-bold">
+        Built by a Future Engineer 🚀
+    </footer>
+
+    <script>
+        // Tab Switching Logic
+        const linkTab = document.getElementById('linkTab');
+        const fileTab = document.getElementById('fileTab');
+        const urlSection = document.getElementById('urlSection');
+        const fileSection = document.getElementById('fileSection');
+
+        linkTab.addEventListener('click', () => {
+            urlSection.classList.remove('hidden');
+            fileSection.classList.add('hidden');
+            linkTab.classList.add('bg-indigo-600');
+            linkTab.classList.remove('bg-slate-800');
+            fileTab.classList.add('bg-slate-800');
+            fileTab.classList.remove('bg-indigo-600');
+        });
+
+        fileTab.addEventListener('click', () => {
+            fileSection.classList.remove('hidden');
+            urlSection.classList.add('hidden');
+            fileTab.classList.add('bg-indigo-600');
+            fileTab.classList.remove('bg-slate-800');
+            linkTab.classList.add('bg-slate-800');
+            linkTab.classList.remove('bg-indigo-600');
+        });
+
+        // Placeholder for Link Logic
+        function processLink() {
+            const url = document.getElementById('videoUrl').value;
+            if(!url) return alert('Please paste a link first!');
+            
+            document.getElementById('statusArea').classList.remove('hidden');
+            document.getElementById('statusLabel').innerText = "Fetching from Web...";
+            
+            alert("To fetch links, we need to set up a free backend. For now, try the 'Upload File' tab to see the magic!");
+        }
+
+        // FFmpeg Logic (Same as before but with UI updates)
+        const { createFFmpeg, fetchFile } = FFmpeg;
+        const ffmpeg = createFFmpeg({ log: true });
+
+        const fileInput = document.getElementById('fileInput');
+        const dropZone = document.getElementById('dropZone');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+
+        async function handleFile(file) {
+            document.getElementById('statusArea').classList.remove('hidden');
+            document.getElementById('resultArea').classList.add('hidden');
+            
+            if (!ffmpeg.isLoaded()) await ffmpeg.load();
+
+            ffmpeg.setProgress(({ ratio }) => {
+                const p = Math.round(ratio * 100);
+                document.getElementById('progressBar').style.width = p + '%';
+                document.getElementById('progressPercent').innerText = p + '%';
+            });
+
+            ffmpeg.FS('writeFile', 'input', await fetchFile(file));
+            await ffmpeg.run('-i', 'input', '-vn', '-ab', '320k', 'output.mp3');
+            
+            const data = ffmpeg.FS('readFile', 'output.mp3');
+            const audioUrl = URL.createObjectURL(new Blob([data.buffer], { type: 'audio/mp3' }));
+            
+            document.getElementById('audioPlayer').src = audioUrl;
+            document.getElementById('downloadBtn').href = audioUrl;
+            document.getElementById('statusArea').classList.add('hidden');
+            document.getElementById('resultArea').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
