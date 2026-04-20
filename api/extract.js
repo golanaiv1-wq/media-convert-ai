@@ -7,8 +7,8 @@ export default async function handler(req, res) {
     if (!url) return res.status(400).json({ error: 'Missing URL' });
 
     try {
-        // שימוש בשרת חלופי שלא דורש הרשמה
-        const response = await fetch('https://cobalt.pervage.xyz/', {
+        // שרת הורדות חלופי ומהיר
+        const response = await fetch('https://cobalt.shun.codes/', {
             method: 'POST',
             headers: {
                 'accept': 'application/json',
@@ -26,9 +26,9 @@ export default async function handler(req, res) {
         if (data && data.url) {
             return res.status(200).json({ url: data.url });
         } else {
-            return res.status(500).json({ error: 'Source busy', details: data });
+            return res.status(500).json({ error: 'Server is busy', details: data });
         }
     } catch (error) {
-        return res.status(500).json({ error: 'Server fetch failed', message: error.message });
+        return res.status(500).json({ error: 'Connection failed', message: error.message });
     }
 }
